@@ -104,7 +104,7 @@ void tarefa_1(void)
 	{
 		a++;
 		port_pin_set_output_level(LED_0_PIN, LED_0_ACTIVE); /* Liga LED. */
-		TarefaContinua(2);
+		//TarefaContinua(2); /* para o uso como sistema preemptivo */
 	
 	}
 }
@@ -115,7 +115,7 @@ void tarefa_2(void)
 	for(;;)
 	{
 		b++;
-		TarefaSuspende(2);	
+		//TarefaSuspende(2); /* para o uso como sistema preemptivo */	
 		port_pin_set_output_level(LED_0_PIN, !LED_0_ACTIVE); 	/* Turn LED off. */
 	}
 }
