@@ -6,9 +6,9 @@
  */
 
 /**
- * \mainpage User Application template doxygen documentation
+ * \mainpage Sistema operacional multitarefas
  *
- * \par Empty user application template
+ * \par Exemplso de tarefas
  *
  * Este arquivo contem exemplos diversos de tarefas e 
  * funcionalidades de um sistema operacional multitarefas.
@@ -17,8 +17,8 @@
  * \par Conteudo
  *
  * -# Inclui funcoes do sistema multitarefas (atraves de multitarefas.h)
- * -# Inicizalizao do processador e do sistema multitarefas
- * -# Criacao de tarefas de demonstracao
+ * -# Inicialização do processador e do sistema multitarefas
+ * -# Criação de tarefas de demonstração
  *
  */
 
@@ -77,9 +77,9 @@ int main(void)
 	/* Criacao das tarefas */
 	/* Parametros: ponteiro, nome, ponteiro da pilha, tamanho da pilha, prioridade da tarefa */
 	
-	CriaTarefa(tarefa_1, "Tarefa 1", PILHA_TAREFA_1, TAM_PILHA_1, 2);
+	CriaTarefa(tarefa_7, "Tarefa 1", PILHA_TAREFA_1, TAM_PILHA_1, 1);
 	
-	CriaTarefa(tarefa_2, "Tarefa 2", PILHA_TAREFA_2, TAM_PILHA_2, 1);
+	CriaTarefa(tarefa_8, "Tarefa 2", PILHA_TAREFA_2, TAM_PILHA_2, 2);
 	
 	/* Cria tarefa ociosa do sistema */
 	CriaTarefa(tarefa_ociosa,"Tarefa ociosa", PILHA_TAREFA_OCIOSA, TAM_PILHA_OCIOSA, 0);
@@ -194,7 +194,7 @@ uint8_t buffer[TAM_BUFFER]; /* declaracao de um buffer (vetor) ou fila circular 
 semaforo_t SemaforoCheio = {0,0}; /* declaracao e inicializacao de um semaforo */
 semaforo_t SemaforoVazio = {TAM_BUFFER,0}; /* declaracao e inicializacao de um semaforo */
 
-void tarefa_7(void)
+void tarefa_7(void) //produtor
 {
 
 	uint8_t a = 1;			/* inicializações para a tarefa */
@@ -209,37 +209,58 @@ void tarefa_7(void)
 		
 		SemaforoLibera(&SemaforoCheio); /* tarefa libera semaforo para tarefa que esta esperando-o */
 		
-		TarefaEspera(10); 	/* tarefa se coloca em espera por 10 marcas de tempo (ticks), equivale a 10ms */		
+		TarefaEspera(1000); 	/* tarefa se coloca em espera por 10 marcas de tempo (ticks), equivale a 10ms */		
+	}
+}
+
+void tarefa_8(void) //consumidor
+{
+
+	uint8_t a = 1;			/* inicializações para a tarefa */
+	uint8_t i = 0;
+	
+	for(;;)
+	{
+		SemaforoAguarda(&SemaforoCheio);
+		
+		buffer[i] = a--;
+		i = (i+1)%TAM_BUFFER;
+		
+		SemaforoLibera(&SemaforoVazio); /* tarefa libera semaforo para tarefa que esta esperando-o */
+		
+		TarefaEspera(1000); 	/* tarefa se coloca em espera por 10 marcas de tempo (ticks), equivale a 10ms */		
 	}
 }
 
 /* Exemplo de tarefa que usa semaforo */
-void tarefa_8(void)
-{
-	static uint8_t f = 0;
-	volatile uint8_t valor;
-		
-	for(;;)
-	{
-		volatile uint8_t contador;
-		
-		do{
-			REG_ATOMICA_INICIO();			
-				contador = SemaforoCheio.contador;			
-			REG_ATOMICA_FIM();
-			
-			if (contador == 0)
-			{
-				TarefaEspera(100);
-			}
-				
-		} while (!contador);
-		
-		SemaforoAguarda(&SemaforoCheio);
-		
-		valor = buffer[f];
-		f = (f+1) % TAM_BUFFER;		
-		
-		SemaforoLibera(&SemaforoVazio);
-	}
-}
+//void tarefa_8(void)
+//{
+//	static uint8_t f = 0;
+//	volatile uint8_t valor;
+//		
+//	for(;;)
+//	{
+//		volatile uint8_t contador;
+//		
+//		do{
+//			REG_ATOMICA_INICIO();			
+//				contador = SemaforoCheio.contador;			
+//			REG_ATOMICA_FIM();
+//			
+//			if (contador == 0)
+//			{
+//				TarefaEspera(100);
+//			}
+//				
+//		} while (!contador);
+//		
+//		SemaforoAguarda(&SemaforoCheio);
+//		
+//		valor = buffer[f];
+//		f = (f+1) % TAM_BUFFER;	
+//		
+//		(void)valor;	/* leitura da variável para evitar aviso (warning) do compilador */
+//		
+//		SemaforoLibera(&SemaforoVazio);
+//	}
+//}
