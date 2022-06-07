@@ -10,7 +10,7 @@
  *
  * \par Exemplso de tarefas
  *
- * Este arquivo contem exemplos diversos de tarefas e 
+ * Este arquivo contem exemplos diversos de tarefas e
  * funcionalidades de um sistema operacional multitarefas.
  *
  *
@@ -29,6 +29,7 @@
 #include "stdint.h"
 #include "multitarefas.h"
 
+
 /*
  * Prototipos das tarefas
  */
@@ -37,9 +38,7 @@ void tarefa_2(void);
 void tarefa_3(void);
 void tarefa_4(void);
 void tarefa_5(void);
-void tarefa_6(void);
-void tarefa_7(void);
-void tarefa_8(void);
+void tarefa_imprimir(void);
 
 /*
  * Configuracao dos tamanhos das pilhas
@@ -50,8 +49,6 @@ void tarefa_8(void);
 #define TAM_PILHA_4			(TAM_MINIMO_PILHA + 24)
 #define TAM_PILHA_5			(TAM_MINIMO_PILHA + 24)
 #define TAM_PILHA_6			(TAM_MINIMO_PILHA + 24)
-#define TAM_PILHA_7			(TAM_MINIMO_PILHA + 24)
-#define TAM_PILHA_8			(TAM_MINIMO_PILHA + 24)
 #define TAM_PILHA_OCIOSA	(TAM_MINIMO_PILHA + 24)
 
 /*
@@ -62,10 +59,10 @@ uint32_t PILHA_TAREFA_2[TAM_PILHA_2];
 uint32_t PILHA_TAREFA_3[TAM_PILHA_3];
 uint32_t PILHA_TAREFA_4[TAM_PILHA_4];
 uint32_t PILHA_TAREFA_5[TAM_PILHA_5];
-uint32_t PILHA_TAREFA_6[TAM_PILHA_6];
-uint32_t PILHA_TAREFA_7[TAM_PILHA_7];
-uint32_t PILHA_TAREFA_8[TAM_PILHA_8];
+uint32_t PILHA_TAREFA_IMPRIMIR[TAM_PILHA_6];
 uint32_t PILHA_TAREFA_OCIOSA[TAM_PILHA_OCIOSA];
+
+uint32_t cont1 = 0, cont2 = 0, cont3 = 0, cont4 = 0, cont5 = 0, soma = 0;
 
 /*
  * Funcao principal de entrada do sistema
@@ -73,194 +70,97 @@ uint32_t PILHA_TAREFA_OCIOSA[TAM_PILHA_OCIOSA];
 int main(void)
 {
 	system_init();
-	
+
 	/* Criacao das tarefas */
 	/* Parametros: ponteiro, nome, ponteiro da pilha, tamanho da pilha, prioridade da tarefa */
-	
-	CriaTarefa(tarefa_7, "Tarefa 1", PILHA_TAREFA_1, TAM_PILHA_1, 1);
-	
-	CriaTarefa(tarefa_8, "Tarefa 2", PILHA_TAREFA_2, TAM_PILHA_2, 2);
-	
+
+	CriaTarefa(tarefa_1, "Tarefa 1", PILHA_TAREFA_1, TAM_PILHA_1, 5); // Maior prioridade
+
+    CriaTarefa(tarefa_2, "Tarefa 2", PILHA_TAREFA_2, TAM_PILHA_2, 4);
+
+    CriaTarefa(tarefa_3, "Tarefa 3", PILHA_TAREFA_3, TAM_PILHA_3, 3);
+
+    CriaTarefa(tarefa_4, "Tarefa 4", PILHA_TAREFA_4, TAM_PILHA_4, 2);
+
+    CriaTarefa(tarefa_5, "Tarefa 5", PILHA_TAREFA_5, TAM_PILHA_5, 1); // Menor Prioridade
+
+    CriaTarefa(tarefa_imprimir, "Tarefa Imprimir", PILHA_TAREFA_IMPRIMIR, TAM_PILHA_6, 6);
+
+    /* Suspende todas as Threads exceto a de maior prioridade (tarefa_1) */
+
+    TCB[1].estado = ESPERA;
+    TCB[2].estado = ESPERA;
+    TCB[3].estado = ESPERA;
+    TCB[4].estado = ESPERA;
+
 	/* Cria tarefa ociosa do sistema */
 	CriaTarefa(tarefa_ociosa,"Tarefa ociosa", PILHA_TAREFA_OCIOSA, TAM_PILHA_OCIOSA, 0);
-	
+
 	/* Configura marca de tempo */
-	ConfiguraMarcaTempo();   
-	
+	ConfiguraMarcaTempo();
+
 	/* Inicia sistema multitarefas */
 	IniciaMultitarefas();
-	
+
 	/* Nunca chega aqui */
 	while (1)
 	{
 	}
 }
 
-/* Tarefas de exemplo que usam funcoes para suspender/continuar as tarefas */
-void tarefa_1(void)
+void tarefa_1()
 {
-	volatile uint16_t a = 0;
-	for(;;)
-	{
-		a++;
-		port_pin_set_output_level(LED_0_PIN, LED_0_ACTIVE); /* Liga LED. */
-		TarefaContinua(2);
-	
-	}
+    for (;;)
+    {
+        cont1++;
+        TarefaSuspende(1); // A própria tarefa se suspende
+    }
 }
 
-void tarefa_2(void)
+void tarefa_2()
 {
-	volatile uint16_t b = 0;
-	for(;;)
-	{
-		b++;
-		TarefaSuspende(2);	
-		port_pin_set_output_level(LED_0_PIN, !LED_0_ACTIVE); 	/* Turn LED off. */
-	}
+    for (;;)
+    {
+        cont2++;
+        TarefaContinua(1); // Chama a tarefa de maior prioridade (tarefa_1)
+        TarefaSuspende(2); // A própria tarefa se suspende
+    }
 }
 
-/* Tarefas de exemplo que usam funcoes para suspender as tarefas por algum tempo (atraso/delay) */
-void tarefa_3(void)
+void tarefa_3()
 {
-	volatile uint16_t a = 0;
-	for(;;)
-	{
-		a++;	
-			
-		/* Liga LED. */
-		port_pin_set_output_level(LED_0_PIN, LED_0_ACTIVE);
-		TarefaEspera(1000); 	/* tarefa 1 se coloca em espera por 3 marcas de tempo (ticks) */
-		
-		/* Desliga LED. */
-		port_pin_set_output_level(LED_0_PIN, !LED_0_ACTIVE);
-		TarefaEspera(1000); 	/* tarefa 1 se coloca em espera por 3 marcas de tempo (ticks) */
-	}
+    for (;;)
+    {
+        cont3++;
+        TarefaContinua(2); // Chama a tarefa de maior prioridade (tarefa_2)
+        TarefaSuspende(3); // A própria tarefa se suspende
+    }
 }
 
-void tarefa_4(void)
+void tarefa_4()
 {
-	volatile uint16_t b = 0;
-	for(;;)
-	{
-		b++;
-		TarefaEspera(5);	/* tarefa se coloca em espera por 5 marcas de tempo (ticks) */
-	}
+    for (;;)
+    {
+        cont4++;
+        TarefaContinua(3); // Chama a tarefa de maior prioridade (tarefa_3)
+        TarefaSuspende(4); // A própria tarefa se suspende
+    }
 }
 
-/* Tarefas de exemplo que usam funcoes de semaforo */
-
-semaforo_t SemaforoTeste = {0,0}; /* declaracao e inicializacao de um semaforo */
-
-void tarefa_5(void)
+void tarefa_5()
 {
-
-	uint32_t a = 0;			/* inicializações para a tarefa */
-	
-	for(;;)
-	{
-		
-		a++;				/* código exemplo da tarefa */
-
-		TarefaEspera(3); 	/* tarefa se coloca em espera por 3 marcas de tempo (ticks) */
-		
-		SemaforoLibera(&SemaforoTeste); /* tarefa libera semaforo para tarefa que esta esperando-o */
-		
-	}
+    for (;;)
+    {
+        cont5++;
+        TarefaContinua(4); // Chama a tarefa de maior prioridade (tarefa_4)
+    }
 }
 
-/* Exemplo de tarefa que usa semaforo */
-void tarefa_6(void)
+void tarefa_imprimir()
 {
-	
-	uint32_t b = 0;	    /* inicializações para a tarefa */
-	
-	for(;;)
-	{
-		
-		b++; 			/* código exemplo da tarefa */
-		
-		SemaforoAguarda(&SemaforoTeste); /* tarefa se coloca em espera por semaforo */
-
-	}
+    for (;;)
+    {
+        soma = cont1 + cont2 + cont3 + cont4 + cont5;
+        TarefaEspera(30);
+    }
 }
-
-/* soluçao com buffer compartihado */
-/* Tarefas de exemplo que usam funcoes de semaforo */
-
-#define TAM_BUFFER 10
-uint8_t buffer[TAM_BUFFER]; /* declaracao de um buffer (vetor) ou fila circular */
-
-semaforo_t SemaforoCheio = {0,0}; /* declaracao e inicializacao de um semaforo */
-semaforo_t SemaforoVazio = {TAM_BUFFER,0}; /* declaracao e inicializacao de um semaforo */
-
-void tarefa_7(void) //produtor
-{
-
-	uint8_t a = 1;			/* inicializações para a tarefa */
-	uint8_t i = 0;
-	
-	for(;;)
-	{
-		SemaforoAguarda(&SemaforoVazio);
-		
-		buffer[i] = a++;
-		i = (i+1)%TAM_BUFFER;
-		
-		SemaforoLibera(&SemaforoCheio); /* tarefa libera semaforo para tarefa que esta esperando-o */
-		
-		TarefaEspera(1000); 	/* tarefa se coloca em espera por 10 marcas de tempo (ticks), equivale a 10ms */		
-	}
-}
-
-void tarefa_8(void) //consumidor
-{
-
-	uint8_t a = 1;			/* inicializações para a tarefa */
-	uint8_t i = 0;
-	
-	for(;;)
-	{
-		SemaforoAguarda(&SemaforoCheio);
-		
-		buffer[i] = a--;
-		i = (i+1)%TAM_BUFFER;
-		
-		SemaforoLibera(&SemaforoVazio); /* tarefa libera semaforo para tarefa que esta esperando-o */
-		
-		TarefaEspera(1000); 	/* tarefa se coloca em espera por 10 marcas de tempo (ticks), equivale a 10ms */		
-	}
-}
-
-/* Exemplo de tarefa que usa semaforo */
-//void tarefa_8(void)
-//{
-//	static uint8_t f = 0;
-//	volatile uint8_t valor;
-//		
-//	for(;;)
-//	{
-//		volatile uint8_t contador;
-//		
-//		do{
-//			REG_ATOMICA_INICIO();			
-//				contador = SemaforoCheio.contador;			
-//			REG_ATOMICA_FIM();
-//			
-//			if (contador == 0)
-//			{
-//				TarefaEspera(100);
-//			}
-//				
-//		} while (!contador);
-//		
-//		SemaforoAguarda(&SemaforoCheio);
-//		
-//		valor = buffer[f];
-//		f = (f+1) % TAM_BUFFER;	
-//		
-//		(void)valor;	/* leitura da variável para evitar aviso (warning) do compilador */
-//		
-//		SemaforoLibera(&SemaforoVazio);
-//	}
-//}
